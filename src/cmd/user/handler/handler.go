@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +14,35 @@ import (
 )
 
 func HandlerRequest(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	fmt.Println("Ta chegando no handler")
+	fmt.Println("Método:", request.HTTPMethod)
+	fmt.Println("Path:", request.Path)
+
+	switch request.HTTPMethod {
+	case "POST":
+		if request.Path == "/user" {
+			return createUser(request)
+		}
+	case "PUT":
+		if strings.HasPrefix(request.Path, "/user/") {
+			return updateUser(request)
+		}
+	case "GET":
+		if request.Path == "/users" {
+			return getUsers(request)
+		}
+		if strings.HasPrefix(request.Path, "/user/") {
+			return getUserById(request)
+		}
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: 404,
+		Body:       "Rota não encontrada",
+	}, nil
+}
+
+func createUser(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	fmt.Println("Ta chegando na função createUser")
 
 	var user model.User
 
@@ -75,4 +104,21 @@ func HandlerRequest(request events.APIGatewayProxyRequest) (events.APIGatewayPro
 		},
 		Body: string(body),
 	}, nil
+}
+
+func updateUser(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	id := strings.TrimPrefix(request.Path, "/user/")
+
+	return events.APIGatewayProxyResponse{StatusCode: 200, Body: fmt.Sprintf("Usuário %s atualizado", id)}, nil
+}
+
+func getUsers(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	return events.APIGatewayProxyResponse{StatusCode: 200, Body: "Lista de usuários"}, nil
+}
+
+func getUserById(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	id := strings.TrimPrefix(request.Path, "/user/")
+
+	return events.APIGatewayProxyResponse{StatusCode: 200, Body: fmt.Sprintf("Usuário com ID %s", id)}, nil
 }
