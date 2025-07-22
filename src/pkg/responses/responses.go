@@ -8,26 +8,24 @@ import (
 )
 
 // returns a JSON response to api gateway events request
-func DomainJSON(response events.APIGatewayProxyResponse, statusCode int, datas interface{}) events.APIGatewayProxyResponse {
-	response.Headers = map[string]string{
-		"Content-Type": "application/json",
-	}
-
-	response.StatusCode = statusCode
-
+func DomainJSON(statusCode int, datas interface{}) events.APIGatewayProxyResponse {
 	body, err := json.Marshal(datas)
 	if err != nil {
 		log.Fatal("Erro para fazer o marshal", err)
 	}
 
-	response.Body = string(body)
-
-	return response
+	return events.APIGatewayProxyResponse{
+		StatusCode: statusCode,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: string(body),
+	}
 }
 
 // returns an error in JSON format
-func DomainError(response events.APIGatewayProxyResponse, statusCode int, err error) {
-	DomainJSON(response, statusCode, struct {
+func DomainError(statusCode int, err error) events.APIGatewayProxyResponse {
+	return DomainJSON(statusCode, struct {
 		Error string `json:"error"`
 	}{
 		Error: err.Error(),
