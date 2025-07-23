@@ -74,8 +74,14 @@ func (h *UserHandler) updateUser(request events.APIGatewayProxyRequest) (events.
 }
 
 func (h *UserHandler) getUsers(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var users []*model.User
 
-	return events.APIGatewayProxyResponse{StatusCode: 200, Body: "Lista de usuários"}, nil
+	usersList, err := h.UserService.ListUsers(users)
+	if err != nil {
+		return responses.DomainError(400, err), err
+	}
+
+	return responses.DomainJSON(200, usersList), nil
 }
 
 func (h *UserHandler) getUserById(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

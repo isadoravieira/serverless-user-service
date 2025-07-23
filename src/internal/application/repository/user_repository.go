@@ -30,3 +30,16 @@ func (r *UserRepository) Save(user *model.User) error {
 	_, err := r.DB.PutItem(input)
 	return err
 }
+
+func (r *UserRepository) List() (*dynamodb.ScanOutput, error) {
+	items := &dynamodb.ScanInput{
+		TableName: aws.String("user"),
+	}
+
+	result, err := r.DB.Scan(items)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}

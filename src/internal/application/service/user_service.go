@@ -22,14 +22,38 @@ func NewUserService(db *dynamodb.DynamoDB) *UserService {
 func (s *UserService) CreateUser(user *model.User) (*model.User, error) {
 	user.ID = uuid.New().String()
 
-	dateNow := formatteddates.GetCurrencyFormattedDate()
+	dateNow, err := formatteddates.GetCurrencyFormattedDate()
+	if err != nil {
+		return nil, err
+	}
 
 	user.CreatedAt = dateNow
 	user.UpdatedAt = dateNow
 
-	err := s.UserRepo.Save(user)
+	err = s.UserRepo.Save(user)
 	if err != nil {
 		return nil, err
 	}
+
 	return user, nil
+}
+
+func (s *UserService) ListUsers(users []*model.User) ([]*model.User, error) {
+	resultList, err := s.UserRepo.List()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range resultList.Items {
+		users = append(users, &model.User{
+			ID:        *item["id"].S,
+			Name:      *item["name"].S,
+			Email:     *item["email"].S,
+			Password:  *item["password"].S,
+			CreatedAt: *item["createdAt"].S,
+			UpdatedAt: *item["updatedAt"].S,
+		})
+	}
+
+	return users, nil
 }
