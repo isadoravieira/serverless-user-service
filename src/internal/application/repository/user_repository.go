@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/isadoravieira/serverless-user-service/src/internal/domain/model"
@@ -42,4 +44,33 @@ func (r *UserRepository) List() (*dynamodb.ScanOutput, error) {
 	}
 
 	return result, nil
+}
+
+func (r *UserRepository) GetById(id string) (*model.User, error) {
+	input := &dynamodb.GetItemInput{
+		TableName: aws.String("user"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {S: aws.String(id)},
+		},
+	}
+
+	result, err := r.DB.GetItem(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Item == nil {
+		return nil, fmt.Errorf("user with ID %s not found", id)
+	}
+
+	user := &model.User{
+		ID:        *result.Item["id"].S,
+		Name:      *result.Item["name"].S,
+		Email:     *result.Item["email"].S,
+		Password:  *result.Item["password"].S,
+		CreatedAt: *result.Item["createdAt"].S,
+		UpdatedAt: *result.Item["updatedAt"].S,
+	}
+
+	return user, nil
 }

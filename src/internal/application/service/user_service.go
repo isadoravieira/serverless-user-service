@@ -57,3 +57,7 @@ func (s *UserService) ListUsers(users []*model.User) ([]*model.User, error) {
 
 	return users, nil
 }
+
+func (s *UserService) GetUserByID(id string) (*model.User, error) {
+	return s.UserRepo.GetById(id)
+}

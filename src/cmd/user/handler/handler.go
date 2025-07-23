@@ -87,5 +87,10 @@ func (h *UserHandler) getUsers(request events.APIGatewayProxyRequest) (events.AP
 func (h *UserHandler) getUserById(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	id := strings.TrimPrefix(request.Path, "/user/")
 
-	return events.APIGatewayProxyResponse{StatusCode: 200, Body: fmt.Sprintf("Usuário com ID %s", id)}, nil
+	user, err := h.UserService.GetUserByID(id)
+	if err != nil {
+		return responses.DomainError(404, err), err
+	}
+
+	return responses.DomainJSON(200, user), nil
 }
