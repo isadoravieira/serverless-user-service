@@ -37,7 +37,7 @@ func (h *UserHandler) Handle(request events.APIGatewayProxyRequest) (events.APIG
 		}
 	case "GET":
 		if request.Path == "/users" {
-			return h.getUsers(request)
+			return h.getUsers()
 		}
 		if strings.HasPrefix(request.Path, "/user/") {
 			return h.getUserById(request)
@@ -70,10 +70,23 @@ func (h *UserHandler) createUser(request events.APIGatewayProxyRequest) (events.
 func (h *UserHandler) updateUser(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	id := strings.TrimPrefix(request.Path, "/user/")
 
-	return events.APIGatewayProxyResponse{StatusCode: 200, Body: fmt.Sprintf("Usuário %s atualizado", id)}, nil
+	var userInput model.User
+	err := json.Unmarshal([]byte(request.Body), &userInput)
+	if err != nil {
+		return responses.DomainError(400, err), err
+	}
+
+	userInput.ID = id
+
+	updatedUser, err := h.UserService.UpdateUser(&userInput)
+	if err != nil {
+		return responses.DomainError(400, err), err
+	}
+
+	return responses.DomainJSON(200, updatedUser), nil
 }
 
-func (h *UserHandler) getUsers(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (h *UserHandler) getUsers() (events.APIGatewayProxyResponse, error) {
 	var users []*model.User
 
 	usersList, err := h.UserService.ListUsers(users)

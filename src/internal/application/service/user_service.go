@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/google/uuid"
 
@@ -60,4 +62,34 @@ func (s *UserService) ListUsers(users []*model.User) ([]*model.User, error) {
 
 func (s *UserService) GetUserByID(id string) (*model.User, error) {
 	return s.UserRepo.GetById(id)
+}
+
+func (s *UserService) UpdateUser(updateData *model.User) (*model.User, error) {
+	existingUser, err := s.UserRepo.GetById(updateData.ID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	if updateData.Name != "" {
+		existingUser.Name = updateData.Name
+	}
+	if updateData.Email != "" {
+		existingUser.Email = updateData.Email
+	}
+	if updateData.Password != "" {
+		existingUser.Password = updateData.Password
+	}
+
+	dateNow, err := formatteddates.GetCurrencyFormattedDate()
+	if err != nil {
+		return nil, err
+	}
+	existingUser.UpdatedAt = dateNow
+
+	err = s.UserRepo.Save(existingUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return existingUser, nil
 }
